@@ -84,6 +84,7 @@ int insertSymbTab (char *symb, Entity whichEntt) {
   topTab++;
   return current;
 };
+//gera uma variavel temporária e retorna o indice desta na tabela de simbolos.
 int temp () { 
 	char nomeTemporaria[4];
 	int retorno;
@@ -94,6 +95,9 @@ int temp () {
 	topTemp++;
 	return (retorno);
 };
+
+//imprime a tabela de simbolos
+
 void printSymbTable () {
 int i, j, inicio, fimTrecho;
 inicio=0;
@@ -199,14 +203,17 @@ int main()
     char symbol[21]; // simbolo
     int intval;}t; // posicao na tabela de simbolos
  }
-%token _ABRECHA _FECHACHA
-%token _ATRIB _EOF _ABREPAR _FECHAPAR _PTVIRG
-%token _MAIS _MENOS _MULT _DIVID _PRINT
+ //declara os tokens
+
+%token BLOCO SELCOMND COMANDOS VARIAVEL DECLARACAO
+%token _ABRECHA _FECHACHA 
+%token _ATRIB _EOF _ABREPAR _FECHAPAR _PTVIRG _VIRG
+%token _SOMA _SUB _MULT _WHILE _PRINT _THEN _ELSE _INT _DO 
 %token _ERRO
 %token _N _V
 
 //simbolos nao terminais e simbolos terminais que possuem atributos.
-%type<t> E T F _N _V
+%type<t> EXPRESSAO T F _N _ID
 %%
 
 
@@ -214,44 +221,74 @@ int main()
 regras da gramatica e acoes semanticas
 */
 
-S    : Stm _PTVIRG S 
-     |  /* empty */ {finaliza ();  
-		    }
-     ;
-Stm  : _V _ATRIB E {
-                   
-                   $1.intval = insertSymbTab($1.symbol, Variable);
-		   gera(STO,$3.intval,$1.intval,NADA);
-		   printf("\n");
-		   }
-     | _PRINT _ABREPAR E _FECHAPAR {
-                   gera(PRINT,$3.intval, NADA, NADA);
-		   printf("\n");}
-     ;
-E    : E _MAIS T {
-                 $$.intval = temp(); 
-		 gera (ADD,$1.intval,$3.intval,$$.intval);}
-     | E _MENOS T{    
-                 $$.intval = temp(); 
-		 gera (SUB,$1.intval,$3.intval,$$.intval);}
-     | T	 {	
-                 $$.intval = $1.intval;}
-T    : T _MULT F {	
-                 $$.intval = temp(); 
-		 gera (MUL,$1.intval,$3.intval,$$.intval);}	
-     |T _DIVID F {	
-                 $$.intval = temp(); 
-		 gera (DIV,$1.intval,$3.intval,$$.intval);}
-      | F	 {	
-                 $$.intval = $1.intval;}
-F     : _ABREPAR E _FECHAPAR 
-                 {
-		 $$.intval = $2.intval;} 
-F    : _V {$$.intval=insertSymbTab($1.symbol, Variable);
-          }
 
-     | _N {$$.intval=insertSymbTab($1.symbol, Constant);
-          } 
+PROGRAMA    : DECLARACAO _ABRECHA COMANDOS _FECHACHA{
+			
+			};
+
+DECLARACAO  : DECLARACAO VARIAVEL _PTVIRG{
+			
+			} 
+			| VARIAVEL _PTVIRG{
+			
+			}
+			;
+
+
+VARIAVEL    : VARIAVEL _VIRG _ID{
+			} 
+			
+			| _INT _ID{
+			
+			}
+			;
+
+COMANDOS 	: COMANDOS _PTVIRG SELCOMNDO{
+			} 
+			
+			| SELCOMNDO{
+			}
+			;
+                 
+SELCOMNDO : _IF _ABRECHA EXPRESSAO _FECHACHA _THEN BLOCO _ELSE BLOCO{
+			}
+			
+			|  _IF _ABRECHA EXPRESSAO _FECHACHA _THEN BLOCO{
+			}
+			
+			|  _WHILE _ABRECHA EXPRESSAO _FECHACHA _DO BLOCO{
+			}
+			
+			|  _ID _ATRIB EXPRESSAO{
+			}
+			
+			|  _PRINT _ABRECHA L _FECHACHA {
+			}
+            ;     
+            
+BLOCO	  : _ABRECHA COMANDOS _FECHACHA{
+			} 
+			| SELCOMANDO{
+		    }
+		   ;
+                 
+L 		  : L _VIRG EXPRESSAO{}
+		  ;
+                 
+EXPRESSAO : EXPRESSAO _SOMA T{}
+			|  EXPRESSAO _SUB T{}
+			;
+			
+					
+T    	  : T _MULT F {	
+			$$.intval = temp(); 
+			gera (MUL,$1.intval,$3.intval,$$.intval);}	
+			;
+		 
+F    	  : _ID {$$.intval=insertSymbTab($1.symbol, Variable);
+		   }
+		  | _N {$$.intval=insertSymbTab($1.symbol, Constant);
+           } 
      ;
 %%
 

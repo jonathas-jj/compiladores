@@ -28,7 +28,6 @@ DO				"do"
 SOMA            [\+]
 SUB             [\-]
 MULT            [\*]
-DIV         	[/]
 ATRIB			"="
 
 //parenteses
@@ -38,6 +37,9 @@ FP              ")"
 //chaves
 AC				"{"
 FC				"}"
+
+//virgula
+VIRG 			","
 
 //ponto e virgula
 PTV             ";"
@@ -58,26 +60,31 @@ PTV             ";"
 {RET}           {
                 return yytext[0];
                 }
-
-IF				{return _IF;}
-WHILE			{return _WHILE;}
-PRINT			{return _PRINT;}
-THEN			{return _THEN;}
-ELSE			{return _ELSE;}
-INT				{return _INT;}
-DO				{return _DO;}
+                _WHILE
+			_PRINT
+			_THEN
+			_ELSE
+			_INT
+			_DO
+{IF}				{return _IF;}
+{WHILE}			{return _WHILE;}
+{PRINT}			{return _PRINT;}
+{THEN}			{return _THEN;}
+{ELSE}			{return _ELSE;}
+{INT}				{return _INT;}
+{DO}			{return _DO;}
 
 
 {SOMA}			{_return _SOMA;}
 {SUB}			{_return _SUB;}
-{DIV}			{_return _DIV;}
 {MULT}			{_return _MULT;}
 
-AP              {_return _ABREPAR;}
-FP              {_return _FECHAPAR;}
+{AP}              {_return _ABREPAR;}
+{FP}              {_return _FECHAPAR;}
 
-AC				{_return _ABRECHA;}
-FC				{_return _FECHACHA;}
+{AC}				{_return _ABRECHA;}
+{FC}				{_return _FECHACHA;}
 
-PTV             {_return _PTVIRG;}
+{VIRG}             {_return _VIRG;}
+{PTV}             {_return _PTVIRG;}
 
