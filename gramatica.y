@@ -129,6 +129,8 @@ SUB,
 MUL,
 DIV,
 STO,
+J,
+JF,
 PRINT
 } Operador;
 
@@ -151,6 +153,13 @@ void gera (Operador codop,int end1,int end2,int end3){
 	quadrupla [prox].operando3 = end3;
 	prox++;
 	};
+void remenda(int posM,Operador codop,int end1,int end2,int end3 )
+{
+	quadrupla [posM].op = codop;
+	quadrupla [posM].operando1 = end1;
+	quadrupla [posM].operando2 = end2;
+	quadrupla [posM].operando3 = end3;
+}
 //imprime
 void imprimeQuadrupla(){
   int r; 
@@ -203,6 +212,12 @@ int main()
     char symbol[21]; // simbolo
     int intval;}t; // posicao na tabela de simbolos
  }
+ %union{
+ struct Ma{
+	char caracter[21];
+	int intQuadr;}m;
+ }
+
  //declara os tokens
 
 %token BLOCO SELCOMND COMANDOS VARIAVEL DECLARACAO
@@ -212,9 +227,12 @@ int main()
 %token _ERRO
 %token _N _V
 
+
 //simbolos nao terminais e simbolos terminais que possuem atributos.
-%type<t> EXPRESSAO T F _N _ID
+%type<t> EXPRESSAO T F _N _ID 
+%type<m> M N
 %%
+
 
 
 /* 
@@ -223,7 +241,7 @@ regras da gramatica e acoes semanticas
 
 
 PROGRAMA    : DECLARACAO _ABRECHA COMANDOS _FECHACHA{
-			
+				finaliza();
 			};
 
 DECLARACAO  : DECLARACAO VARIAVEL _PTVIRG{
@@ -239,7 +257,7 @@ VARIAVEL    : VARIAVEL _VIRG _ID{
 			} 
 			
 			| _INT _ID{
-			
+				
 			}
 			;
 
@@ -249,45 +267,61 @@ COMANDOS 	: COMANDOS _PTVIRG SELCOMNDO{
 			| SELCOMNDO{
 			}
 			;
+
                  
-SELCOMNDO : _IF _ABRECHA EXPRESSAO _FECHACHA _THEN BLOCO _ELSE BLOCO{
+SELCOMNDO : _IF _ABRECHA EXPRESSAO _FECHACHA _THEN M BLOCO _ELSE M BLOCO{
+				remenda($3.indQuadr,JF,$2.intval,$6.indQuadr+1,NADA);
+				remenda($6.indQuadr, J, prox, NADA,NADA);
 			}
 			
-			|  _IF _ABRECHA EXPRESSAO _FECHACHA _THEN BLOCO{
+			|  _IF _ABRECHA EXPRESSAO _FECHACHA _THEN M BLOCO{
+				remenda($4.indQuadr,JF,S2.intval,NADA)
 			}
 			
-			|  _WHILE _ABRECHA EXPRESSAO _FECHACHA _DO BLOCO{
+			|  _WHILE N _ABRECHA EXPRESSAO _FECHACHA M _DO BLOCO{
+				gera(J,$2.intQuadr,NADA,NADA);
+				remenda($4.indQuadr,JF,$3.intval,prox,NADA)
 			}
 			
 			|  _ID _ATRIB EXPRESSAO{
+					gera(STO,$3.intval,$1.intval,NADA);
 			}
 			
-			|  _PRINT _ABRECHA L _FECHACHA {
-			}
+			|  _PRINT _ABRECHA E _FECHACHA {
+                   gera(PRINT,$3.intval, NADA, NADA);
+				   printf("\n");}
             ;     
             
 BLOCO	  : _ABRECHA COMANDOS _FECHACHA{
 			} 
 			| SELCOMANDO{
 		    }
-		   ;
+		   ;             
                  
-L 		  : L _VIRG EXPRESSAO{}
-		  ;
-                 
-EXPRESSAO : EXPRESSAO _SOMA T{}
-			|  EXPRESSAO _SUB T{}
+EXPRESSAO : EXPRESSAO _SOMA T{
+				$$.intval=temp();
+				gera(ADD,$1.intval,$3.intval,$$.intval);	
+			}
+			|  EXPRESSAO _SUB T{
+				$$.intval=temp();
+				gera(SUB,$1.intval,$3.intval,$$.intval);			
+			}
 			;
 			
-					
+M 		  : {   $$.indQuadr = prox;
+				prox++;
+			};
+				
+N			: {$$.indQuadr = prox;};
+		
 T    	  : T _MULT F {	
 			$$.intval = temp(); 
 			gera (MUL,$1.intval,$3.intval,$$.intval);}	
 			;
 		 
-F    	  : _ID {$$.intval=insertSymbTab($1.symbol, Variable);
+F    	  : _ID {$$.intval=$1.insertSymbTab($1.symbol, Variable);
 		   }
-		  | _N {$$.intval=insertSymbTab($1.symbol, Constant);
+		  | _N {$$.intval=$1.insertSymbTab($1.symbol, Constant);
            } 
      ;
 %%
